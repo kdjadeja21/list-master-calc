@@ -4,7 +4,6 @@ import {
   connectAuthEmulator,
   getAuth,
   GoogleAuthProvider,
-  signInAnonymously,
   signInWithPopup,
   type Auth,
   type User,
@@ -32,6 +31,18 @@ export const firebaseApp = getApps().length
   : initializeApp(
       USE_FIREBASE_EMULATOR ? { ...firebaseConfig, apiKey: "demo-key", projectId: "demo-project" } : firebaseConfig
     );
+
+/**
+ * True when Firebase has enough config to actually talk to a project (real
+ * credentials, or the local emulator). Callers should check this before
+ * touching Firebase Auth/Firestore so that, when it's `false` (e.g. no
+ * `.env.local` at all), the app never attempts real Firebase calls — which
+ * would otherwise throw (`auth/invalid-api-key`, etc.) and break the app for
+ * everyone, including the fully local test account.
+ */
+export function isFirebaseConfigured(): boolean {
+  return USE_FIREBASE_EMULATOR || Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
+}
 
 // Lazy: `getAuth`/`getFirestore` validate the config (e.g. API key format)
 // as soon as they're called, so we defer calling them until something
@@ -81,12 +92,6 @@ export function signInWithGoogle(): Promise<User> {
   return signInWithPopup(getFirebaseAuth(), googleProvider).then((result) => result.user);
 }
 
-/**
- * Temporary test login: signs in an anonymous Firebase user so the whole
- * app can be exercised (creating lists, sections, items, etc.) without a
- * real Google account. Intended for QA/testing only — see
- * `NEXT_PUBLIC_ENABLE_TEST_LOGIN` in `.env.local.example`.
- */
-export function signInAsTestUser(): Promise<User> {
-  return signInAnonymously(getFirebaseAuth()).then((result) => result.user);
-}
+// The test/QA login lives entirely in `lib/local/local-auth.ts` and never
+// touches Firebase — see `NEXT_PUBLIC_ENABLE_TEST_LOGIN` in
+// `.env.local.example`.

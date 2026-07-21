@@ -5,11 +5,14 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
-import { signInAsTestUser, signInWithGoogle } from "@/lib/firebase/client";
+import { signInWithGoogle } from "@/lib/firebase/client";
+import { signInAsLocalTestUser } from "@/lib/local/local-auth";
 
 // Temporary: lets anyone try the whole app (create lists, sections, items…)
-// without a real Google account. Gate it behind an env flag so it never
-// ships to a production build by accident. Remove once real testing is done.
+// without a real Google account. This test session is fully local (stored
+// in `localStorage`) and never touches Firebase — no project, credentials,
+// or network access required. Gate it behind an env flag so it never ships
+// to a production build by accident. Remove once real testing is done.
 const TEST_LOGIN_ENABLED = process.env.NEXT_PUBLIC_ENABLE_TEST_LOGIN === "true";
 
 function GoogleIcon() {
@@ -53,10 +56,10 @@ export default function SignInPage() {
     }
   }
 
-  async function handleTestSignIn() {
+  function handleTestSignIn() {
     setTestLoading(true);
     try {
-      await signInAsTestUser();
+      signInAsLocalTestUser();
       router.push("/");
     } catch (err) {
       console.error("Test sign in failed", err);

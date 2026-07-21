@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { onSnapshot } from "firebase/firestore";
 import { useFirebaseSync } from "@/components/providers/firebase-sync";
 import {
   addItem as addItemFn,
@@ -10,9 +9,9 @@ import {
   deleteItem as deleteItemFn,
   deleteSection as deleteSectionFn,
   editItem as editItemFn,
-  listDocRef,
   renameSection as renameSectionFn,
-} from "@/lib/firestore/lists";
+  subscribeToList,
+} from "@/lib/data/lists-repo";
 import type { ListDoc } from "@/lib/types";
 
 export function listQueryKey(listId: string) {
@@ -27,14 +26,10 @@ export function useList(listId: string) {
   useEffect(() => {
     if (!listId || !ready) return;
 
-    const unsubscribe = onSnapshot(
-      listDocRef(listId),
-      (snap) => {
-        if (!snap.exists()) {
-          queryClient.setQueryData(queryKey, null);
-          return;
-        }
-        queryClient.setQueryData(queryKey, { id: snap.id, ...snap.data() } as ListDoc);
+    const unsubscribe = subscribeToList(
+      listId,
+      (list) => {
+        queryClient.setQueryData(queryKey, list);
       },
       (error) => {
         console.error("Failed to subscribe to list", error);

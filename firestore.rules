@@ -1,8 +1,10 @@
 rules_version = '2';
 
 // Deploy with: firebase deploy --only firestore:rules
-// Requires the client to be signed in to Firebase Auth (Google sign-in, or
-// the temporary anonymous test login — both set request.auth.uid).
+// Requires the client to be signed in to Firebase Auth (e.g. Google
+// sign-in). The temporary local test account never reaches Firestore — its
+// data lives entirely in the browser's localStorage — so it isn't covered
+// by (or reliant on) these rules.
 service cloud.firestore {
   match /databases/{database}/documents {
     match /lists/{listId} {
