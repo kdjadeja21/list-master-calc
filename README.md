@@ -21,20 +21,19 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 Copy `.env.local.example` to `.env.local` and set:
 
 ```bash
-NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true
 NEXT_PUBLIC_ENABLE_TEST_LOGIN=true
 ```
 
-Then, in a separate terminal, start the local Firebase Emulator Suite (Auth + Firestore):
+That's it — no Firebase project, credentials, or emulator needed. The sign-in page
+now shows a temporary **Continue with test account** button that starts a session
+stored entirely in your browser's `localStorage`. All test-account data (lists,
+sections, items) is read from and written to `localStorage` too, so the whole app
+can be exercised fully offline with zero dependency on Firebase. This is meant for
+local testing/QA only and should stay disabled (the default) elsewhere. Test data is
+local to your browser and may be wiped at any time (e.g. by clearing site data).
 
-```bash
-npx firebase emulators:start
-```
-
-With both running, the sign-in page shows a temporary **Continue with test account**
-button that signs in anonymously so you can exercise the whole app — creating lists,
-sections, and items — without a real Google account or Firebase credentials. This is
-meant for local testing/QA only and should stay disabled (the default) elsewhere.
+Signing in with **Continue with Google** still uses real Firebase Auth + Firestore,
+as configured via the `NEXT_PUBLIC_FIREBASE_*` variables below.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

@@ -2,14 +2,13 @@
 
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { onSnapshot } from "firebase/firestore";
 import { useFirebaseSync } from "@/components/providers/firebase-sync";
 import {
   createList as createListFn,
   deleteList as deleteListFn,
-  listsQuery,
   renameList as renameListFn,
-} from "@/lib/firestore/lists";
+  subscribeToLists,
+} from "@/lib/data/lists-repo";
 import type { ListDoc } from "@/lib/types";
 
 export function listsQueryKey(uid: string | null) {
@@ -18,9 +17,10 @@ export function listsQueryKey(uid: string | null) {
 
 /**
  * Subscribes to the current user's lists in realtime and exposes them
- * through TanStack Query's cache. Firestore's client SDK applies writes to
- * its local cache optimistically, so mutations feel instant even though we
- * don't hand-roll optimistic cache patches here.
+ * through TanStack Query's cache. For the local test account this reads
+ * from `localStorage`; for everyone else it uses Firestore's client SDK,
+ * which applies writes to its local cache optimistically so mutations feel
+ * instant even though we don't hand-roll optimistic cache patches here.
  */
 export function useLists() {
   const { uid, ready } = useFirebaseSync();
@@ -30,12 +30,9 @@ export function useLists() {
   useEffect(() => {
     if (!uid) return;
 
-    const unsubscribe = onSnapshot(
-      listsQuery(uid),
-      (snapshot) => {
-        const lists = snapshot.docs
-          .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }) as ListDoc)
-          .sort((a, b) => b.updatedAt - a.updatedAt);
+    const unsubscribe = subscribeToLists(
+      uid,
+      (lists) => {
         queryClient.setQueryData(queryKey, lists);
       },
       (error) => {
