@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Button } from "@/components/ui/button";
-import { signInWithGoogle } from "@/lib/firebase/client";
+import { signInAsTestUser, signInWithGoogle } from "@/lib/firebase/client";
+
+// Temporary: lets anyone try the whole app (create lists, sections, items…)
+// without a real Google account. Gate it behind an env flag so it never
+// ships to a production build by accident. Remove once real testing is done.
+const TEST_LOGIN_ENABLED = process.env.NEXT_PUBLIC_ENABLE_TEST_LOGIN === "true";
 
 function GoogleIcon() {
   return (
@@ -33,6 +38,7 @@ function GoogleIcon() {
 export default function SignInPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [testLoading, setTestLoading] = useState(false);
 
   async function handleGoogleSignIn() {
     setLoading(true);
@@ -44,6 +50,19 @@ export default function SignInPage() {
       toast.error("Could not sign in with Google. Please try again.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleTestSignIn() {
+    setTestLoading(true);
+    try {
+      await signInAsTestUser();
+      router.push("/");
+    } catch (err) {
+      console.error("Test sign in failed", err);
+      toast.error("Could not start a test session. Please try again.");
+    } finally {
+      setTestLoading(false);
     }
   }
 
@@ -59,11 +78,35 @@ export default function SignInPage() {
           size="lg"
           className="h-11 w-full rounded-xl border-border bg-card text-sm font-medium"
           onClick={handleGoogleSignIn}
-          disabled={loading}
+          disabled={loading || testLoading}
         >
           <GoogleIcon />
           {loading ? "Signing in..." : "Continue with Google"}
         </Button>
+
+        {TEST_LOGIN_ENABLED ? (
+          <>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="h-px flex-1 bg-border" />
+              <span>for testing only</span>
+              <span className="h-px flex-1 bg-border" />
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              size="lg"
+              className="h-11 w-full rounded-xl text-sm font-medium"
+              onClick={handleTestSignIn}
+              disabled={loading || testLoading}
+            >
+              {testLoading ? "Starting test session..." : "Continue with test account"}
+            </Button>
+            <p className="text-center text-xs text-muted-foreground">
+              Temporary login for QA — skips Google sign-in so you can try every feature. Data
+              created here is not tied to a real account and may be wiped at any time.
+            </p>
+          </>
+        ) : null}
       </div>
     </AuthShell>
   );
