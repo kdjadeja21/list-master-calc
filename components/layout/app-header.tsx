@@ -18,7 +18,7 @@ export function AppHeader({
   title: string;
   leading?: React.ReactNode;
 }) {
-  const { email, signOut } = useAppUser();
+  const { email, isAnonymous, signOut } = useAppUser();
 
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border/80 bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-6">
@@ -28,7 +28,11 @@ export function AppHeader({
           <h1 className="truncate font-serif text-lg font-semibold leading-tight text-foreground">
             {title}
           </h1>
-          {email ? <p className="truncate text-xs text-muted-foreground">{email}</p> : null}
+          {isAnonymous ? (
+            <p className="truncate text-xs text-muted-foreground">Test account (temporary)</p>
+          ) : email ? (
+            <p className="truncate text-xs text-muted-foreground">{email}</p>
+          ) : null}
         </div>
       </div>
       <DropdownMenu>

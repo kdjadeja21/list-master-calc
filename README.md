@@ -16,6 +16,26 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+### Testing without a real Firebase project
+
+Copy `.env.local.example` to `.env.local` and set:
+
+```bash
+NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true
+NEXT_PUBLIC_ENABLE_TEST_LOGIN=true
+```
+
+Then, in a separate terminal, start the local Firebase Emulator Suite (Auth + Firestore):
+
+```bash
+npx firebase emulators:start
+```
+
+With both running, the sign-in page shows a temporary **Continue with test account**
+button that signs in anonymously so you can exercise the whole app — creating lists,
+sections, and items — without a real Google account or Firebase credentials. This is
+meant for local testing/QA only and should stay disabled (the default) elsewhere.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

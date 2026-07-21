@@ -16,6 +16,7 @@ export interface FirebaseSyncState {
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
+  isAnonymous: boolean;
 }
 
 const INITIAL_STATE: FirebaseSyncState = {
@@ -24,6 +25,7 @@ const INITIAL_STATE: FirebaseSyncState = {
   email: null,
   displayName: null,
   photoURL: null,
+  isAnonymous: false,
 };
 
 const FirebaseSyncContext = createContext<FirebaseSyncState>(INITIAL_STATE);
@@ -39,6 +41,7 @@ function userToState(user: User | null, ready = true): FirebaseSyncState {
     email: user?.email ?? null,
     displayName: user?.displayName ?? null,
     photoURL: user?.photoURL ?? null,
+    isAnonymous: user?.isAnonymous ?? false,
   };
 }
 
