@@ -12,6 +12,7 @@ import {
   renameSection as renameSectionFn,
   subscribeToList,
 } from "@/lib/data/lists-repo";
+import { nextDefaultSectionTitle } from "@/lib/section-title";
 import type { ListDoc } from "@/lib/types";
 
 export function listQueryKey(listId: string) {
@@ -55,7 +56,11 @@ function useCurrentSections(listId: string) {
 export function useAddSection(listId: string) {
   const getSections = useCurrentSections(listId);
   return useMutation({
-    mutationFn: async (title: string) => addSectionFn(listId, getSections(), title),
+    mutationFn: async (title?: string) => {
+      const sections = getSections();
+      const resolvedTitle = title?.trim() || nextDefaultSectionTitle(sections);
+      return addSectionFn(listId, sections, resolvedTitle);
+    },
   });
 }
 

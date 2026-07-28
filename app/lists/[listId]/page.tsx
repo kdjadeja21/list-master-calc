@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, LayoutList, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,10 @@ import {
   MobileBottomNav,
 } from "@/components/layout/mobile-bottom-nav";
 import { SectionCard } from "@/components/sections/section-card";
-import { AddSectionDialog } from "@/components/sections/add-section-dialog";
+import {
+  AddSectionFab,
+  useAddSectionAction,
+} from "@/components/sections/add-section-button";
 import { useList } from "@/hooks/use-list";
 import { formatCurrency } from "@/lib/calc";
 
@@ -19,7 +21,7 @@ export default function ListDetailPage() {
   const listId = params.listId;
   const router = useRouter();
   const { data: list, isLoading } = useList(listId);
-  const [addSectionOpen, setAddSectionOpen] = useState(false);
+  const { addDefaultSection, isPending: isAddingSection } = useAddSectionAction(listId);
 
   const sortedSections = [...(list?.sections ?? [])].sort((a, b) => a.order - b.order);
 
@@ -87,12 +89,7 @@ export default function ListDetailPage() {
 
       {list ? (
         <>
-          <AddSectionDialog
-            listId={listId}
-            open={addSectionOpen}
-            onOpenChange={setAddSectionOpen}
-            showFab
-          />
+          <AddSectionFab onClick={addDefaultSection} disabled={isAddingSection} />
           <MobileBottomNav
             left={{
               icon: ArrowLeft,
@@ -102,7 +99,8 @@ export default function ListDetailPage() {
             center={{
               icon: Plus,
               label: "Add section",
-              onClick: () => setAddSectionOpen(true),
+              onClick: addDefaultSection,
+              disabled: isAddingSection,
             }}
             right={{
               icon: LayoutList,

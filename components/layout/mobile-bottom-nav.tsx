@@ -16,6 +16,7 @@ export type MobileBottomNavFab = {
   icon: LucideIcon;
   label: string;
   onClick: () => void;
+  disabled?: boolean;
 };
 
 type MobileBottomNavProps = {
@@ -75,8 +76,9 @@ export function MobileBottomNav({ left, center, right, className }: MobileBottom
               <button
                 type="button"
                 onClick={center.onClick}
+                disabled={center.disabled}
                 aria-label={center.label}
-                className="-mt-7 flex size-[3.75rem] items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_8px_24px_oklch(0.5_0.15_40/0.35)] ring-4 ring-card transition-transform active:scale-95"
+                className="-mt-7 flex size-[3.75rem] items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_8px_24px_oklch(0.5_0.15_40/0.35)] ring-4 ring-card transition-transform active:scale-95 disabled:pointer-events-none disabled:opacity-50"
               >
                 <FabIcon className="size-7" strokeWidth={2.25} />
               </button>
