@@ -33,9 +33,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/calc";
 import { useDeleteList, useRenameList } from "@/hooks/use-lists";
+import { cn } from "@/lib/utils";
 import type { ListDoc } from "@/lib/types";
 
-export function ListCard({ list }: { list: ListDoc }) {
+export function ListCard({ list, animateEnter = false }: { list: ListDoc; animateEnter?: boolean }) {
   const router = useRouter();
   const [renameOpen, setRenameOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -70,52 +71,54 @@ export function ListCard({ list }: { list: ListDoc }) {
 
   return (
     <>
-      <Card
-        role="link"
-        tabIndex={0}
-        onClick={() => router.push(`/lists/${list.id}`)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") router.push(`/lists/${list.id}`);
-        }}
-        className="cursor-pointer px-4 transition-colors hover:bg-accent/40"
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="truncate font-serif text-lg font-semibold text-foreground">
-              {list.title}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {sectionsLabel} &middot; {itemsLabel}
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-1">
-            <p className="text-lg font-semibold text-primary">{formatCurrency(list.total)}</p>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={<Button variant="ghost" size="icon-sm" className="text-muted-foreground" />}
-                onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              >
-                <MoreVertical className="size-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                <DropdownMenuItem
-                  onClick={() => {
-                    setTitle(list.title);
-                    setRenameOpen(true);
-                  }}
+      <div className={cn(animateEnter && "animate-tally-enter")}>
+        <Card
+          role="link"
+          tabIndex={0}
+          onClick={() => router.push(`/lists/${list.id}`)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") router.push(`/lists/${list.id}`);
+          }}
+          className="cursor-pointer px-4 transition-colors hover:bg-accent/40"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate font-serif text-lg font-semibold text-foreground">
+                {list.title}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {sectionsLabel} &middot; {itemsLabel}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <p className="text-lg font-semibold text-primary">{formatCurrency(list.total)}</p>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={<Button variant="ghost" size="icon-sm" className="text-muted-foreground" />}
+                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
-                  <Pencil className="size-4" />
-                  Rename
-                </DropdownMenuItem>
-                <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
-                  <Trash2 className="size-4" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <MoreVertical className="size-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setTitle(list.title);
+                      setRenameOpen(true);
+                    }}
+                  >
+                    <Pencil className="size-4" />
+                    Rename
+                  </DropdownMenuItem>
+                  <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
+                    <Trash2 className="size-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      </div>
 
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
         <DialogContent onClick={(e) => e.stopPropagation()}>

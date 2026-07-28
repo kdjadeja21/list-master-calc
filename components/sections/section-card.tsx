@@ -35,9 +35,18 @@ import { ItemRow } from "@/components/sections/item-row";
 import { AddItemRow } from "@/components/sections/add-item-row";
 import { formatCurrency } from "@/lib/calc";
 import { useDeleteSection, useRenameSection } from "@/hooks/use-list";
+import { cn } from "@/lib/utils";
 import type { Section } from "@/lib/types";
 
-export function SectionCard({ listId, section }: { listId: string; section: Section }) {
+export function SectionCard({
+  listId,
+  section,
+  animateEnter = false,
+}: {
+  listId: string;
+  section: Section;
+  animateEnter?: boolean;
+}) {
   const [renameOpen, setRenameOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [title, setTitle] = useState(section.title);
@@ -68,54 +77,59 @@ export function SectionCard({ listId, section }: { listId: string; section: Sect
 
   return (
     <>
-      <Card className="px-4">
-        <div className="flex items-center justify-between gap-2 pt-4">
-          <p className="min-w-0 flex-1 truncate font-serif text-base font-semibold text-foreground">
-            {section.title}
-          </p>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  className="shrink-0 text-muted-foreground"
-                />
-              }
-            >
-              <MoreVertical className="size-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setTitle(section.title);
-                  setRenameOpen(true);
-                }}
+      <div
+        className={cn(animateEnter && "animate-tally-enter")}
+        data-section-id={section.id}
+      >
+        <Card className="px-4">
+          <div className="flex items-center justify-between gap-2 pt-4">
+            <p className="min-w-0 flex-1 truncate font-serif text-base font-semibold text-foreground">
+              {section.title}
+            </p>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="shrink-0 text-muted-foreground"
+                  />
+                }
               >
-                <Pencil className="size-4" />
-                Rename
-              </DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
-                <Trash2 className="size-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <CardContent className="px-0 pt-3">
-          <div className="flex flex-col divide-y divide-border/70">
-            {sortedItems.map((item) => (
-              <ItemRow key={item.id} listId={listId} sectionId={section.id} item={item} />
-            ))}
+                <MoreVertical className="size-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => {
+                    setTitle(section.title);
+                    setRenameOpen(true);
+                  }}
+                >
+                  <Pencil className="size-4" />
+                  Rename
+                </DropdownMenuItem>
+                <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
+                  <Trash2 className="size-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <AddItemRow listId={listId} sectionId={section.id} />
-          <Separator className="my-2" />
-          <div className="flex items-center justify-between pt-1">
-            <p className="text-sm font-medium text-muted-foreground">Section Total</p>
-            <p className="text-base font-semibold text-primary">{formatCurrency(section.total)}</p>
-          </div>
-        </CardContent>
-      </Card>
+          <CardContent className="px-0 pt-3">
+            <div className="flex flex-col divide-y divide-border/70">
+              {sortedItems.map((item) => (
+                <ItemRow key={item.id} listId={listId} sectionId={section.id} item={item} />
+              ))}
+            </div>
+            <AddItemRow listId={listId} sectionId={section.id} />
+            <Separator className="my-2" />
+            <div className="flex items-center justify-between pt-1">
+              <p className="text-sm font-medium text-muted-foreground">Section Total</p>
+              <p className="text-base font-semibold text-primary">{formatCurrency(section.total)}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
         <DialogContent>

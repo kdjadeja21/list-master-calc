@@ -38,7 +38,11 @@ export function NewListDialog({ open, onOpenChange }: NewListDialogProps) {
       const id = await createList.mutateAsync(trimmed);
       setOpen(false);
       setTitle("");
-      router.push(`/lists/${id}`);
+      // Pause briefly on My Lists so the new card's entrance animation can play.
+      const reduceMotion =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.setTimeout(() => router.push(`/lists/${id}`), reduceMotion ? 0 : 720);
     } catch {
       toast.error("Couldn't create list");
     }

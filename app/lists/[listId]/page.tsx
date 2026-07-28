@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, LayoutList, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,11 @@ import {
   MobileBottomNav,
 } from "@/components/layout/mobile-bottom-nav";
 import { SectionCard } from "@/components/sections/section-card";
-import { AddSectionDialog } from "@/components/sections/add-section-dialog";
+import {
+  AddSectionFab,
+  useAddSectionAction,
+} from "@/components/sections/add-section-button";
+import { useAppearingIds } from "@/hooks/use-appearing-ids";
 import { useList } from "@/hooks/use-list";
 import { formatCurrency } from "@/lib/calc";
 
@@ -19,9 +23,23 @@ export default function ListDetailPage() {
   const listId = params.listId;
   const router = useRouter();
   const { data: list, isLoading } = useList(listId);
-  const [addSectionOpen, setAddSectionOpen] = useState(false);
+  const { addDefaultSection, isPending: isAddingSection } = useAddSectionAction(listId);
 
   const sortedSections = [...(list?.sections ?? [])].sort((a, b) => a.order - b.order);
+  const sectionIds = sortedSections.map((section) => section.id);
+  const appearingIds = useAppearingIds(sectionIds);
+  const newestAppearingId =
+    sortedSections.filter((section) => appearingIds.has(section.id)).at(-1)?.id ?? null;
+  const lastScrolledIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!newestAppearingId || newestAppearingId === lastScrolledIdRef.current) return;
+    lastScrolledIdRef.current = newestAppearingId;
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const node = document.querySelector(`[data-section-id="${newestAppearingId}"]`);
+    node?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "nearest" });
+  }, [newestAppearingId]);
 
   return (
     <div className={`flex min-h-screen flex-col bg-background ${MOBILE_BOTTOM_NAV_PADDING} sm:pb-28`}>
@@ -80,19 +98,19 @@ export default function ListDetailPage() {
           </div>
         ) : (
           sortedSections.map((section) => (
-            <SectionCard key={section.id} listId={listId} section={section} />
+            <SectionCard
+              key={section.id}
+              listId={listId}
+              section={section}
+              animateEnter={appearingIds.has(section.id)}
+            />
           ))
         )}
       </main>
 
       {list ? (
         <>
-          <AddSectionDialog
-            listId={listId}
-            open={addSectionOpen}
-            onOpenChange={setAddSectionOpen}
-            showFab
-          />
+          <AddSectionFab onClick={addDefaultSection} disabled={isAddingSection} />
           <MobileBottomNav
             left={{
               icon: ArrowLeft,
@@ -102,7 +120,8 @@ export default function ListDetailPage() {
             center={{
               icon: Plus,
               label: "Add section",
-              onClick: () => setAddSectionOpen(true),
+              onClick: addDefaultSection,
+              disabled: isAddingSection,
             }}
             right={{
               icon: LayoutList,
