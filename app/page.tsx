@@ -11,12 +11,14 @@ import { NewListDialog, NewListInlineButton } from "@/components/lists/new-list-
 import { ListCard } from "@/components/lists/list-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppUser } from "@/hooks/use-app-user";
+import { useAppearingIds } from "@/hooks/use-appearing-ids";
 import { useLists } from "@/hooks/use-lists";
 
 export default function HomePage() {
   const { data: lists, isLoading } = useLists();
   const { signOut } = useAppUser();
   const [newListOpen, setNewListOpen] = useState(false);
+  const appearingIds = useAppearingIds((lists ?? []).map((list) => list.id));
 
   return (
     <div className={`flex min-h-screen flex-col bg-background ${MOBILE_BOTTOM_NAV_PADDING}`}>
@@ -33,7 +35,11 @@ export default function HomePage() {
         ) : lists && lists.length > 0 ? (
           <div className="flex flex-col gap-3">
             {lists.map((list) => (
-              <ListCard key={list.id} list={list} />
+              <ListCard
+                key={list.id}
+                list={list}
+                animateEnter={appearingIds.has(list.id)}
+              />
             ))}
           </div>
         ) : (

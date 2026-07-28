@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, LayoutList, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import {
   AddSectionFab,
   useAddSectionAction,
 } from "@/components/sections/add-section-button";
+import { useAppearingIds } from "@/hooks/use-appearing-ids";
 import { useList } from "@/hooks/use-list";
 import { formatCurrency } from "@/lib/calc";
 
@@ -24,6 +26,20 @@ export default function ListDetailPage() {
   const { addDefaultSection, isPending: isAddingSection } = useAddSectionAction(listId);
 
   const sortedSections = [...(list?.sections ?? [])].sort((a, b) => a.order - b.order);
+  const sectionIds = sortedSections.map((section) => section.id);
+  const appearingIds = useAppearingIds(sectionIds);
+  const newestAppearingId =
+    sortedSections.filter((section) => appearingIds.has(section.id)).at(-1)?.id ?? null;
+  const lastScrolledIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!newestAppearingId || newestAppearingId === lastScrolledIdRef.current) return;
+    lastScrolledIdRef.current = newestAppearingId;
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const node = document.querySelector(`[data-section-id="${newestAppearingId}"]`);
+    node?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "nearest" });
+  }, [newestAppearingId]);
 
   return (
     <div className={`flex min-h-screen flex-col bg-background ${MOBILE_BOTTOM_NAV_PADDING} sm:pb-28`}>
@@ -82,7 +98,12 @@ export default function ListDetailPage() {
           </div>
         ) : (
           sortedSections.map((section) => (
-            <SectionCard key={section.id} listId={listId} section={section} />
+            <SectionCard
+              key={section.id}
+              listId={listId}
+              section={section}
+              animateEnter={appearingIds.has(section.id)}
+            />
           ))
         )}
       </main>
