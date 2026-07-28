@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Check, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,12 @@ export function AddItemRow({ listId, sectionId }: { listId: string; sectionId: s
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const addItem = useAddItem(listId);
+
+  function close() {
+    setOpen(false);
+    setName("");
+    setPrice("");
+  }
 
   async function handleAdd() {
     const trimmedName = name.trim();
@@ -24,6 +30,7 @@ export function AddItemRow({ listId, sectionId }: { listId: string; sectionId: s
       await addItem.mutateAsync({ sectionId, name: trimmedName, price: parsedPrice });
       setName("");
       setPrice("");
+      toast.success("Item added");
     } catch {
       toast.error("Couldn't add item");
     }
@@ -60,19 +67,17 @@ export function AddItemRow({ listId, sectionId }: { listId: string; sectionId: s
         inputMode="decimal"
         className="h-8 w-24"
       />
-      <Button size="sm" onClick={handleAdd} disabled={addItem.isPending}>
-        Add
-      </Button>
       <Button
-        size="sm"
+        size="icon-sm"
         variant="ghost"
-        onClick={() => {
-          setOpen(false);
-          setName("");
-          setPrice("");
-        }}
+        onClick={handleAdd}
+        disabled={addItem.isPending}
+        aria-label="Save item"
       >
-        Cancel
+        <Check className="size-4" />
+      </Button>
+      <Button size="icon-sm" variant="ghost" onClick={close} aria-label="Cancel">
+        <X className="size-4" />
       </Button>
     </div>
   );

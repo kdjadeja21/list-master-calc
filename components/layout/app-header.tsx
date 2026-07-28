@@ -41,7 +41,8 @@ export function AppHeader({
             <Button
               variant="ghost"
               size="icon"
-              className="hidden shrink-0 text-muted-foreground sm:inline-flex"
+              className="shrink-0 text-muted-foreground"
+              aria-label="Account menu"
             />
           }
         >

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFirebaseSync } from "@/components/providers/firebase-sync";
 import {
@@ -19,33 +19,60 @@ export function listQueryKey(listId: string) {
   return ["list", listId] as const;
 }
 
+function toError(error: unknown, fallback: string) {
+  return error instanceof Error ? error : new Error(fallback);
+}
+
 export function useList(listId: string) {
   const { ready } = useFirebaseSync();
   const queryClient = useQueryClient();
   const queryKey = listQueryKey(listId);
+  const [retryKey, setRetryKey] = useState(0);
+  const [subscribeError, setSubscribeError] = useState<Error | null>(null);
+  const [activeSubscriptionId, setActiveSubscriptionId] = useState<string | null>(null);
+  const subscriptionId = `${listId}:${retryKey}`;
 
   useEffect(() => {
     if (!listId || !ready) return;
 
+    const currentSubscriptionId = `${listId}:${retryKey}`;
+
     const unsubscribe = subscribeToList(
       listId,
       (list) => {
+        setSubscribeError(null);
+        setActiveSubscriptionId(currentSubscriptionId);
         queryClient.setQueryData(queryKey, list);
       },
       (error) => {
         console.error("Failed to subscribe to list", error);
+        setSubscribeError(toError(error, "Failed to load list"));
+        setActiveSubscriptionId(currentSubscriptionId);
       }
     );
 
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, listId]);
+  }, [ready, listId, retryKey]);
 
-  return useQuery<ListDoc | null>({
+  const query = useQuery<ListDoc | null>({
     queryKey,
     queryFn: () => queryClient.getQueryData<ListDoc | null>(queryKey) ?? null,
     enabled: ready,
   });
+
+  const hasSnapshot = activeSubscriptionId === subscriptionId;
+
+  return {
+    ...query,
+    isError: !!subscribeError && hasSnapshot,
+    error: subscribeError,
+    retry: () => {
+      setSubscribeError(null);
+      setRetryKey((key) => key + 1);
+    },
+    isLoading: !ready || (!hasSnapshot && !!listId),
+  };
 }
 
 function useCurrentSections(listId: string) {
