@@ -2,9 +2,16 @@
 
 import { useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, LayoutList, Plus } from "lucide-react";
+import { ArrowLeft, LayoutList, LogOut, MoreVertical, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   MOBILE_BOTTOM_NAV_PADDING,
   MobileBottomNav,
@@ -14,6 +21,7 @@ import {
   AddSectionFab,
   useAddSectionAction,
 } from "@/components/sections/add-section-button";
+import { useAppUser } from "@/hooks/use-app-user";
 import { useAppearingIds } from "@/hooks/use-appearing-ids";
 import { useList } from "@/hooks/use-list";
 import { formatCurrency } from "@/lib/calc";
@@ -22,7 +30,8 @@ export default function ListDetailPage() {
   const params = useParams<{ listId: string }>();
   const listId = params.listId;
   const router = useRouter();
-  const { data: list, isLoading } = useList(listId);
+  const { signOut } = useAppUser();
+  const { data: list, isLoading, isError, retry } = useList(listId);
   const { addDefaultSection, isPending: isAddingSection } = useAddSectionAction(listId);
 
   const sortedSections = [...(list?.sections ?? [])].sort((a, b) => a.order - b.order);
@@ -72,6 +81,29 @@ export default function ListDetailPage() {
               <p className="text-xl font-bold text-primary">{formatCurrency(list?.total ?? 0)}</p>
             )}
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 text-muted-foreground"
+                  aria-label="Account menu"
+                />
+              }
+            >
+              <MoreVertical className="size-5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => signOut({ redirectUrl: "/sign-in" })}
+              >
+                <LogOut className="size-4" />
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
@@ -81,6 +113,11 @@ export default function ListDetailPage() {
             <Skeleton className="h-40 w-full rounded-xl" />
             <Skeleton className="h-40 w-full rounded-xl" />
           </div>
+        ) : isError ? (
+          <QueryErrorState
+            message="Couldn't load this list. Check your connection and try again."
+            onRetry={retry}
+          />
         ) : list === null ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center text-muted-foreground">
             <p className="text-sm">This list doesn&apos;t exist or was deleted.</p>
@@ -91,9 +128,14 @@ export default function ListDetailPage() {
         ) : sortedSections.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center text-muted-foreground">
             <LayoutList className="size-10 opacity-50" />
-            <p className="max-w-xs text-sm">
+            <p className="max-w-xs text-sm sm:hidden">
               No sections yet. Tap <span className="font-medium text-primary">Add section</span>{" "}
               below to create your first one.
+            </p>
+            <p className="hidden max-w-xs text-sm sm:block">
+              No sections yet. Click the{" "}
+              <span className="font-medium text-primary">Add section</span> button to create your
+              first one.
             </p>
           </div>
         ) : (
@@ -108,7 +150,7 @@ export default function ListDetailPage() {
         )}
       </main>
 
-      {list ? (
+      {list && !isError ? (
         <>
           <AddSectionFab onClick={addDefaultSection} disabled={isAddingSection} />
           <MobileBottomNav

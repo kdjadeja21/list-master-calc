@@ -9,13 +9,14 @@ import {
 } from "@/components/layout/mobile-bottom-nav";
 import { NewListDialog, NewListInlineButton } from "@/components/lists/new-list-dialog";
 import { ListCard } from "@/components/lists/list-card";
+import { QueryErrorState } from "@/components/ui/query-error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppUser } from "@/hooks/use-app-user";
 import { useAppearingIds } from "@/hooks/use-appearing-ids";
 import { useLists } from "@/hooks/use-lists";
 
 export default function HomePage() {
-  const { data: lists, isLoading } = useLists();
+  const { data: lists, isLoading, isError, retry } = useLists();
   const { signOut } = useAppUser();
   const [newListOpen, setNewListOpen] = useState(false);
   const appearingIds = useAppearingIds((lists ?? []).map((list) => list.id));
@@ -32,6 +33,11 @@ export default function HomePage() {
             <Skeleton className="h-[74px] w-full rounded-xl" />
             <Skeleton className="h-[74px] w-full rounded-xl" />
           </div>
+        ) : isError ? (
+          <QueryErrorState
+            message="Couldn't load your lists. Check your connection and try again."
+            onRetry={retry}
+          />
         ) : lists && lists.length > 0 ? (
           <div className="flex flex-col gap-3">
             {lists.map((list) => (
@@ -45,8 +51,12 @@ export default function HomePage() {
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center text-muted-foreground">
             <ClipboardList className="size-10 opacity-50" />
-            <p className="max-w-xs text-sm">
+            <p className="max-w-xs text-sm sm:hidden">
               No lists yet. Tap <span className="font-medium text-primary">New list</span> below to
+              get started.
+            </p>
+            <p className="hidden max-w-xs text-sm sm:block">
+              No lists yet. Click <span className="font-medium text-primary">New list</span> above to
               get started.
             </p>
           </div>

@@ -44,6 +44,7 @@ export function ItemRow({
         updates: { name: trimmedName, price: parsedPrice },
       });
       setEditing(false);
+      toast.success("Item updated");
     } catch {
       toast.error("Couldn't update item");
     }
@@ -52,6 +53,7 @@ export function ItemRow({
   async function remove() {
     try {
       await deleteItem.mutateAsync({ sectionId, itemId: item.id });
+      toast.success("Item deleted");
     } catch {
       toast.error("Couldn't delete item");
     }
@@ -85,11 +87,23 @@ export function ItemRow({
   }
 
   return (
-    <div className="group flex items-center gap-2 py-1.5">
-      <p className="min-w-0 flex-1 truncate text-sm text-foreground">{item.name}</p>
-      <p className="text-sm font-medium text-foreground">{formatCurrency(item.price)}</p>
-      <div className="flex shrink-0 items-center gap-0.5 opacity-70 transition-opacity group-hover:opacity-100">
-        <Button size="icon-sm" variant="ghost" onClick={startEdit} className="text-muted-foreground">
+    <div className="flex items-center gap-2 py-1.5">
+      <button
+        type="button"
+        onClick={startEdit}
+        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+      >
+        <p className="min-w-0 flex-1 truncate text-sm text-foreground">{item.name}</p>
+        <p className="text-sm font-medium text-foreground">{formatCurrency(item.price)}</p>
+      </button>
+      <div className="flex shrink-0 items-center gap-0.5">
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          onClick={startEdit}
+          aria-label={`Edit ${item.name}`}
+          className="text-muted-foreground"
+        >
           <Pencil className="size-3.5" />
         </Button>
         <Button
@@ -97,6 +111,7 @@ export function ItemRow({
           variant="ghost"
           onClick={remove}
           disabled={deleteItem.isPending}
+          aria-label={`Delete ${item.name}`}
           className="text-muted-foreground hover:text-destructive"
         >
           <Trash2 className="size-3.5" />

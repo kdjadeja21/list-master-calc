@@ -24,6 +24,7 @@ export function AddItemRow({ listId, sectionId }: { listId: string; sectionId: s
       await addItem.mutateAsync({ sectionId, name: trimmedName, price: parsedPrice });
       setName("");
       setPrice("");
+      toast.success("Item added");
     } catch {
       toast.error("Couldn't add item");
     }

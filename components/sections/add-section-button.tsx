@@ -13,6 +13,7 @@ export function useAddSectionAction(listId: string) {
     if (addSection.isPending) return;
     try {
       await addSection.mutateAsync(undefined);
+      toast.success("Section added");
     } catch {
       toast.error("Couldn't add section");
     }

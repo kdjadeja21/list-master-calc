@@ -59,6 +59,7 @@ export function SectionCard({
     try {
       await renameSection.mutateAsync({ sectionId: section.id, title: trimmed });
       setRenameOpen(false);
+      toast.success("Section renamed");
     } catch {
       toast.error("Couldn't rename section");
     }
@@ -68,6 +69,7 @@ export function SectionCard({
     try {
       await deleteSection.mutateAsync(section.id);
       setDeleteOpen(false);
+      toast.success("Section deleted");
     } catch {
       toast.error("Couldn't delete section");
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFirebaseSync } from "@/components/providers/firebase-sync";
 import {
@@ -15,6 +15,10 @@ export function listsQueryKey(uid: string | null) {
   return ["lists", uid] as const;
 }
 
+function toError(error: unknown, fallback: string) {
+  return error instanceof Error ? error : new Error(fallback);
+}
+
 /**
  * Subscribes to the current user's lists in realtime and exposes them
  * through TanStack Query's cache. For the local test account this reads
@@ -26,23 +30,33 @@ export function useLists() {
   const { uid, ready } = useFirebaseSync();
   const queryClient = useQueryClient();
   const queryKey = listsQueryKey(uid);
+  const [retryKey, setRetryKey] = useState(0);
+  const [subscribeError, setSubscribeError] = useState<Error | null>(null);
+  const [activeSubscriptionId, setActiveSubscriptionId] = useState<string | null>(null);
+  const subscriptionId = `${uid ?? ""}:${retryKey}`;
 
   useEffect(() => {
     if (!uid) return;
 
+    const currentSubscriptionId = `${uid}:${retryKey}`;
+
     const unsubscribe = subscribeToLists(
       uid,
       (lists) => {
+        setSubscribeError(null);
+        setActiveSubscriptionId(currentSubscriptionId);
         queryClient.setQueryData(queryKey, lists);
       },
       (error) => {
         console.error("Failed to subscribe to lists", error);
+        setSubscribeError(toError(error, "Failed to load lists"));
+        setActiveSubscriptionId(currentSubscriptionId);
       }
     );
 
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uid]);
+  }, [uid, retryKey]);
 
   const query = useQuery<ListDoc[]>({
     queryKey,
@@ -50,9 +64,17 @@ export function useLists() {
     enabled: ready && !!uid,
   });
 
+  const hasSnapshot = activeSubscriptionId === subscriptionId;
+
   return {
     ...query,
-    isLoading: !ready || (!!uid && query.data === undefined),
+    isError: !!subscribeError && hasSnapshot,
+    error: subscribeError,
+    retry: () => {
+      setSubscribeError(null);
+      setRetryKey((key) => key + 1);
+    },
+    isLoading: !ready || (!!uid && !hasSnapshot),
   };
 }
 
